@@ -1,47 +1,3 @@
-// const express = require('express')
-// const http = require('http');
-// const socketIo = require('socket.io');
-// const path = require('path');
-
-// const app = express()
-// const server = http.createServer(app);
-// const io = socketIo(server);
-
-// const port = 9008
-
-// // // Serve your Angular app (adjust the path accordingly)
-// // app.use(express.static('http://localhost:4200'));
-
-// // Serve your Angular app
-// const angularAppPath = path.join(__dirname, '../live-stream-ui'); // Adjust the path accordingly
-// app.use('/live-class', express.static(angularAppPath));
-
-// // Socket.IO connection handling
-// io.on('connection', (socket) => {
-//     console.log('A user connected');
-
-//     // Example: Listen for the 'example-event' from the client
-//     socket.on('example-event', (data) => {
-//         console.log('Received example event:', data);
-
-//         // Example: Send a response back to the client
-//         io.emit('server-response', { message: 'Hello, client!' });
-//     });
-
-//     // Disconnect handling
-//     socket.on('disconnect', () => {
-//         console.log('User disconnected');
-//     });
-// });
-
-// app.get('/api', (req, res) => {
-//     res.send('hello world')
-// })
-
-// app.listen(port, () => {
-//     console.log(`Example app listening on port http://localhost:${port}`);
-// })
-
 
 const http = require('http');
 const https = require('https');
@@ -66,13 +22,13 @@ const io = socketIo(server, {
         methods: ["GET", "POST"]
     }
 });
-
 io.on('connection', (socket) => {
-    console.log('A user connected');
+    let roomId = ''
+    console.log('A user connected ==>',socket.id);
 
     // Handle media setup messages from the client
     socket.on('mediaSetup', (data) => {
-        console.log('Received media setup from client:', data);
+        console.log('Received media setup from client:', data, k);
 
         // Broadcast the message to all connected clients except the sender
         socket.broadcast.emit('mediaSetup', data);
@@ -81,6 +37,28 @@ io.on('connection', (socket) => {
     // Handle disconnection
     socket.on('disconnect', () => {
         console.log('User disconnected');
+    });
+
+    socket.on('join-room', (roomId) => {
+        console.log('user room id==>',roomId)
+        roomId = roomId
+        socket.join(roomId);
+    });
+
+    socket.on('offer', (offer) => {
+        // socket.to(roomId).emit('offerReceive', offer);
+        socket.broadcast.emit('offerReceive', offer);
+    });
+
+    socket.on('answer', (answer) => {
+        // console.log('ans',answer);
+        // socket.to(roomId).emit('answer', answer);
+        socket.broadcast.emit('answerReceive', answer);
+    });
+
+    socket.on('ice-candidate', (candidate) => {
+        // socket.to(roomId).emit('ice-candidate', candidate);
+        socket.broadcast.emit('ice-candidate-receive', candidate);
     });
 });
 
@@ -92,3 +70,6 @@ const PORT = 9008;
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`Server is running on https://192.168.0.105:${PORT}`)
 });
+// server.listen(PORT, () => {
+//     console.log(`Server is running on https://192.168.0.105:${PORT}`)
+// });
